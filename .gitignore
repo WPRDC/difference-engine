@@ -1,0 +1,8 @@
+*.pyc
+*.swp
+*.swo
+__pycache__/
+TODO
+*notes.txt
+data/
+parameters/
