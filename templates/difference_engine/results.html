@@ -6,15 +6,25 @@
         <link rel="stylesheet" type="text/css" href="{% static 'difference_engine/css/diff.css' %}">
     </head>
     <body>
-        <h3>{{ thing1 }}</h3>
-        {{ schema1 }} 
-        
-        <h3>{{ thing2 }}</h3>
-        {{ schema2 }}
+    <div class="container">
+        <div class="row">
+            <div class="six columns">
+                <h3>{{ thing1 }}</h3>
+                {{ schema1 }} 
+            </div>
+            <div class="six columns">
+                <h3>{{ thing2 }}</h3>
+                {{ schema2 }}
+            </div>
+        </div>
         <hr>
-        <h3>Comparison of field names</h3>
-        {% autoescape off %}
-            {{ field_table }}
-        {% endautoescape %}<P>
+        <div class="row">
+            <div class="twelve columns">
+                <h3>Comparison of field names</h3>
+                {% autoescape off %}
+                    {{ field_table }}
+                {% endautoescape %}<P>
+            </div>
+        </div>
     </body>
 </html>
