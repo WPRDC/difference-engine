@@ -1,10 +1,20 @@
+{% load static %}<!doctype html>
 <html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'bitkeeper/css/normalize.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'bitkeeper/css/skeleton.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'difference_engine/css/diff.css' %}">
+    </head>
     <body>
         <h3>{{ thing1 }}</h3>
         {{ schema1 }} 
         
         <h3>{{ thing2 }}</h3>
         {{ schema2 }}
-
+        <hr>
+        <h3>Comparison of field names</h3>
+        {% autoescape off %}
+            {{ field_table }}
+        {% endautoescape %}<P>
     </body>
 </html>

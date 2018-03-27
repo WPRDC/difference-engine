@@ -156,14 +156,21 @@ def compare(request,resource_id_1=None,resource_id_2=None):
     data2, schema2 = get_all_records(site,resource_id_2,API_key=None,chunk_size=5000)
     # Compare the field names in the schema:
     #    [ ] What about situations where just field names have changed?
+    field_names1 = [a['id'] for a in schema1]
+    field_names2 = [a['id'] for a in schema2]
 
-
-    # Compare them using difflib (or whatever).
+    # Compare things using difflib (or whatever).
+    field_table = difflib.HtmlDiff().make_table(
+        fromlines=field_names1,
+        tolines=field_names2,
+        fromdesc='Old fields',
+        todesc='New fields')
 
     #for field in fields_1 
     #difflib.HtmlDiff.make_table(
 
-    context = {'thing1': resource_id_1, 'thing2': resource_id_2, 'schema1': schema1, 'schema2': schema2 }
+    context = {'thing1': resource_id_1, 'thing2': resource_id_2, 'schema1': schema1, 'schema2': schema2,
+            'field_table': field_table }
     return render(request, 'difference_engine/results.html', context)
 
 def index(request):
