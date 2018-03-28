@@ -152,8 +152,8 @@ def activate_wormhole(filepath='parameters/settings.json',server='stage'):
 def compare(request,resource_id_1=None,resource_id_2=None):
     # Get the resources.
     site, API_key, _, _ = activate_wormhole(SETTINGS_FILE,SERVER)
-    data1, schema1 = get_all_records(site,resource_id_1,API_key=None,chunk_size=5000)
-    data2, schema2 = get_all_records(site,resource_id_2,API_key=None,chunk_size=5000)
+    data1, schema1 = get_all_records(site,resource_id_1,API_key=API_key,chunk_size=5000)
+    data2, schema2 = get_all_records(site,resource_id_2,API_key=API_key,chunk_size=5000)
     # Compare the field names in the schema:
     #    [ ] What about situations where just field names have changed?
     field_names1 = [a['id'] for a in schema1]
@@ -163,15 +163,59 @@ def compare(request,resource_id_1=None,resource_id_2=None):
     field_table = difflib.HtmlDiff().make_table(
         fromlines=field_names1,
         tolines=field_names2,
-        fromdesc='Old fields',
-        todesc='New fields')
+        fromdesc='Resource 1 fields',
+        todesc='Resource 2 fields')
+    one_but_not_two = list(set(field_names1) - set(field_names2))
+    two_but_not_one = list(set(field_names2) - set(field_names1))
 
-    #for field in fields_1 
-    #difflib.HtmlDiff.make_table(
+    # [ ] This set-difference approach does a poor job of taking 
+    # advantage of the orderedness of the fields and the difflib capabilities.
+
+
+    s1 = list(field_names1)
+    s2 = list(field_names2)
+    fn1, fn2 = list(field_names1), list(field_names2) # These should be just the kept and renamed fields.
+    matcher = difflib.SequenceMatcher(None, field_names1, field_names2)
+    for tag, i1, i2, j1, j2 in reversed(matcher.get_opcodes()):
+        if tag == 'delete': # A column was deleted.
+            print('Remove {} from positions [{}:{}]'.format(s1[i1:i2], i1, i2))
+            del s1[i1:i2]
+            del fn1[i1:i2]
+
+        elif tag == 'equal':
+            print('The sections [{}:{}] of s1 and [{}:{}] of s2 are the same'.format(i1, i2, j1, j2))
+
+        elif tag == 'insert': # A column was added.
+            print('Insert {} from [{}:{}] of s2 into s1 at {}'.format(s2[j1:j2], j1, j2, i1))
+            s1[i1:i2] = s2[j1:j2]
+            del fn2[j1:j2]
+
+        elif tag == 'replace': # The field names were just changed
+            print('Replace {} from [{}:{}] of s1 with {} from [{}:{}] of s2'.format(s1[i1:i2], i1, i2, s2[j1:j2], j1, j2))
+            s1[i1:i2] = s2[j1:j2]
+
+    pprint([[x,y] for x,y in zip(fn1,fn2)])
+
+    diff_table = OrderedDict([])
+
+    for f1,f2 in zip(fn1,fn2):
+        column1 = [str(d[f1]) for d in data1] # We need to cast values to strings
+        column2 = [str(d[f2]) for d in data2] # so that difflib can operate on them.
+        diff_table[f1] = difflib.HtmlDiff().make_table(fromlines=column1,
+                tolines=column2,
+                fromdesc='Resource 1: {}'.format(f1),
+                todesc='Resource 2: {}'.format(f2),
+                context=True,
+                numlines=2,
+                )
 
     context = {'thing1': resource_id_1, 'thing2': resource_id_2, 'schema1': schema1, 'schema2': schema2,
-            'field_table': field_table }
+            'field_table': field_table,
+            'diff_table': diff_table,
+            'one_but_not_two': one_but_not_two, 'two_but_not_one': two_but_not_one,
+            }
     return render(request, 'difference_engine/results.html', context)
+
 
 def index(request):
     context = { }

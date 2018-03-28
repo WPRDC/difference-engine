@@ -26,5 +26,27 @@
                 {% endautoescape %}<P>
             </div>
         </div>
+        <div class="row">
+            <div class="six columns">
+                <h5>Fields in Resource 1 but not Resource 2</h5>
+                {{ one_but_not_two }} 
+            </div>
+                <div class="six columns">
+                <h5>Fields in Resource 2 but not Resource 1</h5>
+                {{ two_but_not_one }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="twelve columns">
+                <h3>Comparisons of resources by column</h3>
+                {% for field,table in diff_table.items %}
+                    <b>{{ field }}</b>
+                    {% autoescape off %}
+                        {{ table }}
+                    {% endautoescape %}<P>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
     </body>
 </html>
