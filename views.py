@@ -190,11 +190,13 @@ def compare(request,resource_id_1=None,resource_id_2=None):
 
     pprint([[x,y] for x,y in zip(fn1,fn2)])
 
+
+    # [ ] We will probably need to suppress the _id column for some datasets.
     diff_table = OrderedDict([])
 
     for f1,f2 in zip(fn1,fn2):
-        column1 = [str(d[f1]) for d in data1] # We need to cast values to strings
-        column2 = [str(d[f2]) for d in data2] # so that difflib can operate on them.
+        column1 = [str(d[f1]) for d in data1] # We need to cast values to strings so that
+        column2 = [str(d[f2]) for d in data2] # difflib.HtmlDiff can operate on them.
         diff_table[f1] = difflib.HtmlDiff().make_table(fromlines=column1,
                 tolines=column2,
                 fromdesc='Resource 1: {}'.format(f1),
@@ -203,9 +205,33 @@ def compare(request,resource_id_1=None,resource_id_2=None):
                 numlines=2,
                 )
 
+    # Synthesize lists of data with only the selected (kept or renamed) fields.
+    d1, d2 = [], []
+    for row in data1:
+        d1_row = {k:v for (k,v) in row.items() if k in fn1}
+        delta_d1 = OrderedDict([(k,v) for (k,v) in row.items() if k in fn1])
+        d1_flat = ','.join([str(row[f1]) for f1 in fn1])
+        pprint([v for (k,v) in row.items() if k in fn1])
+
+        d1.append(d1_flat)
+    for row in data2:
+        d2_flat = ','.join([str(row[f2]) for f2 in fn2])
+        d2.append(d2_flat)
+
+
+    flat_table = difflib.HtmlDiff().make_table(fromlines=d1,
+            tolines=d2,
+            fromdesc='Resource 1',
+            todesc='Resource 2',
+            context=True,
+            numlines=2,
+            )
+
+
     context = {'thing1': resource_id_1, 'thing2': resource_id_2, 'schema1': schema1, 'schema2': schema2,
             'field_table': field_table,
             'diff_table': diff_table,
+            'flat_table': flat_table
             }
     return render(request, 'difference_engine/results.html', context)
 

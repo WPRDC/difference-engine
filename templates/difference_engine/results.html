@@ -26,9 +26,21 @@
                 {% endautoescape %}<P>
             </div>
         </div>
+        <hr>
         <div class="row">
             <div class="twelve columns">
-                <h3>Comparisons of resources by column</h3>
+                <h3>Comparison of resources</h3>
+                {% autoescape off %}
+                    {{ flat_table }}
+                {% endautoescape %}<P>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="twelve columns">
+                <h3>Comparisons of resources by column*</h3>
+                * This approach is a little buggier but sort of more readable.<br>
+
                 {% for field,table in diff_table.items %}
                     <b>{{ field }}</b>
                     {% autoescape off %}
