@@ -113,16 +113,45 @@ def get_all_records(site,resource_id,API_key=None,chunk_size=5000):
 
     return all_records, first_schema
 
-def get_package_parameter(site,package_id,parameter,API_key=None):
+def name_of_resource(resource):
+    if 'name' not in resource:
+        return "Unnamed resource" # This is how CKAN labels such resources.
+    else:
+        return resource['name']
+
+def get_package_parameter(site,package_id,parameter=None,API_key=None):
+    """Gets a CKAN package parameter. If no parameter is specified, all metadata
+    for that package is returned."""
     try:
         ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
         metadata = ckan.action.package_show(id=package_id)
-        desired_string = metadata[parameter]
+        if parameter is None:
+            return metadata
+        else:
+            return metadata[parameter]
         #print("The parameter {} for this package is {}".format(parameter,metadata[parameter]))
     except:
         raise RuntimeError("Unable to obtain package parameter '{}' for package with ID {}".format(parameter,package_id))
 
-    return desired_string
+def get_resource_parameter(site,resource_id,parameter=None,API_key=None):
+    # Some resource parameters you can fetch with this function are
+    # 'cache_last_updated', 'package_id', 'webstore_last_updated',
+    # 'datastore_active', 'id', 'size', 'state', 'hash',
+    # 'description', 'format', 'last_modified', 'url_type',
+    # 'mimetype', 'cache_url', 'name', 'created', 'url',
+    # 'webstore_url', 'mimetype_inner', 'position',
+    # 'revision_id', 'resource_type'
+    # Note that 'size' does not seem to be defined for tabular
+    # data on WPRDC.org. (It's not the number of rows in the resource.)
+    try:
+        ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+        metadata = ckan.action.resource_show(id=resource_id)
+        if parameter is None:
+            return metadata
+        else:
+            metadata[parameter]
+    except:
+        raise RuntimeError("Unable to obtain resource parameter '{}' for resource with ID {}".format(parameter,resource_id))
 
 def find_resource_id(site,package_id,resource_name,API_key=None):
     # Get the resource ID given the package ID and resource name.
@@ -149,15 +178,38 @@ def activate_wormhole(filepath='parameters/settings.json',server='stage'):
 
     return site, API_key, package_id, settings
 
+def get_resource_stuff(site,resource_id,API_key):
+    data, schema = get_all_records(site,resource_id,API_key=API_key,chunk_size=5000)
+
+    metadata = get_resource_parameter(site,resource_id,None,API_key)
+
+    package_id = metadata['package_id']
+    package_title = get_package_parameter(site,package_id,'title',API_key)
+    resource_name = name_of_resource(metadata)
+    package_url_path = "/dataset/" + get_package_parameter(site,package_id,'name',API_key)
+    #package_url = site + package_url_patmetadatah
+    resource_url_path = package_url_path + "/resource/" + resource_id
+    resource_url = site + resource_url_path
+    
+    data_dict = {'resource_name': metadata['name'], 'resource_id': resource_id,
+            'package_name': package_title, 'resource_url': resource_url,
+            'type': 'resource'} # 'type' could also have the value "file"
+
+    field_names = [a['id'] for a in schema]
+
+    return data, schema, data_dict, field_names
+
 def compare(request,resource_id_1=None,resource_id_2=None):
     # Get the resources.
     site, API_key, _, _ = activate_wormhole(SETTINGS_FILE,SERVER)
-    data1, schema1 = get_all_records(site,resource_id_1,API_key=API_key,chunk_size=5000)
-    data2, schema2 = get_all_records(site,resource_id_2,API_key=API_key,chunk_size=5000)
-    # Compare the field names in the schema:
-    #    [ ] What about situations where just field names have changed?
-    field_names1 = [a['id'] for a in schema1]
-    field_names2 = [a['id'] for a in schema2]
+
+
+    # [ ] Start thinking about refactoring this to make one or both of these 
+    #     uploaded CSV files.
+    data1, schema1, data_dict_1, field_names1 = get_resource_stuff(site,resource_id_1,API_key)
+    data2, schema2, data_dict_2, field_names2 = get_resource_stuff(site,resource_id_2,API_key)
+
+    pprint(data_dict_1)
 
     # Compare things using difflib (or whatever).
     field_table = difflib.HtmlDiff().make_table(
@@ -188,9 +240,6 @@ def compare(request,resource_id_1=None,resource_id_2=None):
             print('Replace {} from [{}:{}] of s1 with {} from [{}:{}] of s2'.format(s1[i1:i2], i1, i2, s2[j1:j2], j1, j2))
             s1[i1:i2] = s2[j1:j2]
 
-    pprint([[x,y] for x,y in zip(fn1,fn2)])
-
-
     # [ ] We will probably need to suppress the _id column for some datasets.
     diff_table = OrderedDict([])
 
@@ -211,8 +260,6 @@ def compare(request,resource_id_1=None,resource_id_2=None):
         d1_row = {k:v for (k,v) in row.items() if k in fn1}
         delta_d1 = OrderedDict([(k,v) for (k,v) in row.items() if k in fn1])
         d1_flat = ','.join([str(row[f1]) for f1 in fn1])
-        pprint([v for (k,v) in row.items() if k in fn1])
-
         d1.append(d1_flat)
     for row in data2:
         d2_flat = ','.join([str(row[f2]) for f2 in fn2])
@@ -228,7 +275,11 @@ def compare(request,resource_id_1=None,resource_id_2=None):
             )
 
 
-    context = {'thing1': resource_id_1, 'thing2': resource_id_2, 'schema1': schema1, 'schema2': schema2,
+    context = {'data_dict_1': data_dict_1, 'data_dict_2': data_dict_2, 
+            'rows1': len(data1),
+            'columns1': len(field_names1),
+            'rows2': len(data2),
+            'columns2': len(field_names2),
             'field_table': field_table,
             'diff_table': diff_table,
             'flat_table': flat_table

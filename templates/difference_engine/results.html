@@ -1,6 +1,7 @@
 {% load static %}<!doctype html>
 <html>
     <head>
+        <title>The Difference Engine</title>
         <link rel="stylesheet" type="text/css" href="{% static 'bitkeeper/css/normalize.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'bitkeeper/css/skeleton.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'difference_engine/css/diff.css' %}">
@@ -8,13 +9,26 @@
     <body>
     <div class="container">
         <div class="row">
+            <div class="five columns">
+                <h2 style="font-variant: small-caps;font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif !important">The Difference Engine</h2>
+            </div>
+            <div class="seven columns">
+                <span style="font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif"><i>Find the differences between two resources on a CKAN-powered data portal.</i></span>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
             <div class="six columns">
-                <h3>{{ thing1 }}</h3>
-                {{ schema1 }} 
+                <h5>File 1</h5>
+                Resource name: <b>{{ data_dict_1.resource_name }}</b><br>
+                Source data: <a href="{{ data_dict_1.resource_url }}">{{ data_dict_1.package_name }}:{{ data_dict_1.resource_name }}</a><br>
+                Rows {% autoescape off %}&times;{% endautoescape %} columns: <b>{{ rows1 }}</b> {% autoescape off %}&times;{% endautoescape %} <b>{{ columns1 }}</b><br>
             </div>
             <div class="six columns">
-                <h3>{{ thing2 }}</h3>
-                {{ schema2 }}
+                <h5>File 2</h5>
+                Resource name: <b>{{ data_dict_2.resource_name }}</b><br>
+                Source data: <a href="{{ data_dict_2.resource_url }}">{{ data_dict_2.package_name }}:{{ data_dict_2.resource_name }}</a><br>
+                Rows {% autoescape off %}&times;{% endautoescape %} columns: <b>{{ rows2 }}</b> {% autoescape off %}&times;{% endautoescape %} <b>{{ columns2 }}</b><br>
             </div>
         </div>
         <hr>
