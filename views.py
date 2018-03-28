@@ -165,12 +165,6 @@ def compare(request,resource_id_1=None,resource_id_2=None):
         tolines=field_names2,
         fromdesc='Resource 1 fields',
         todesc='Resource 2 fields')
-    one_but_not_two = list(set(field_names1) - set(field_names2))
-    two_but_not_one = list(set(field_names2) - set(field_names1))
-
-    # [ ] This set-difference approach does a poor job of taking 
-    # advantage of the orderedness of the fields and the difflib capabilities.
-
 
     s1 = list(field_names1)
     s2 = list(field_names2)
@@ -212,7 +206,6 @@ def compare(request,resource_id_1=None,resource_id_2=None):
     context = {'thing1': resource_id_1, 'thing2': resource_id_2, 'schema1': schema1, 'schema2': schema2,
             'field_table': field_table,
             'diff_table': diff_table,
-            'one_but_not_two': one_but_not_two, 'two_but_not_one': two_but_not_one,
             }
     return render(request, 'difference_engine/results.html', context)
 
