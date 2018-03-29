@@ -20,17 +20,28 @@
         <div class="row">
             <div class="six columns">
                 <h5>File 1</h5>
+                {% if error  %}
+                    {{ error }}<br>
+                    Here's the list of resource candidates for file 1: {{ candidate_r_ids1 }}
+                {% else %}
                 Resource name: <b>{{ data_dict_1.resource_name }}</b><br>
                 Source data: <a href="{{ data_dict_1.resource_url }}">{{ data_dict_1.package_name }}:{{ data_dict_1.resource_name }}</a><br>
                 Rows {% autoescape off %}&times;{% endautoescape %} columns: <b>{{ rows1 }}</b> {% autoescape off %}&times;{% endautoescape %} <b>{{ columns1 }}</b><br>
+                {% endif %}
             </div>
             <div class="six columns">
                 <h5>File 2</h5>
+                {% if error %}
+                    {{ error }}<br>
+                    Here's the list of resource candidates for file 2: {{ candidate_r_ids2 }}
+                {% else %}
                 Resource name: <b>{{ data_dict_2.resource_name }}</b><br>
                 Source data: <a href="{{ data_dict_2.resource_url }}">{{ data_dict_2.package_name }}:{{ data_dict_2.resource_name }}</a><br>
                 Rows {% autoescape off %}&times;{% endautoescape %} columns: <b>{{ rows2 }}</b> {% autoescape off %}&times;{% endautoescape %} <b>{{ columns2 }}</b><br>
+                {% endif %}
             </div>
         </div>
+        {% if not error %}
         <hr>
         <div class="row">
             <div class="twelve columns">
@@ -63,6 +74,7 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
     </div>
     </body>
 </html>
