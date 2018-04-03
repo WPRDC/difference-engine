@@ -362,11 +362,13 @@ def compare(request,resource_code_1=None,resource_code_2=None):
         s2 = list(field_names2)
         fn1, fn2 = list(field_names1), list(field_names2) # These should be just the kept and renamed fields.
         matcher = difflib.SequenceMatcher(None, field_names1, field_names2)
+        identical_fn = True
         for tag, i1, i2, j1, j2 in reversed(matcher.get_opcodes()):
             if tag == 'delete': # A column was deleted.
                 print('Remove {} from positions [{}:{}]'.format(s1[i1:i2], i1, i2))
                 del s1[i1:i2]
                 del fn1[i1:i2]
+                identical_fn = False
 
             elif tag == 'equal':
                 print('The sections [{}:{}] of s1 and [{}:{}] of s2 are the same'.format(i1, i2, j1, j2))
@@ -375,10 +377,12 @@ def compare(request,resource_code_1=None,resource_code_2=None):
                 print('Insert {} from [{}:{}] of s2 into s1 at {}'.format(s2[j1:j2], j1, j2, i1))
                 s1[i1:i2] = s2[j1:j2]
                 del fn2[j1:j2]
+                identical_fn = False
 
             elif tag == 'replace': # The field names were just changed
                 print('Replace {} from [{}:{}] of s1 with {} from [{}:{}] of s2'.format(s1[i1:i2], i1, i2, s2[j1:j2], j1, j2))
                 s1[i1:i2] = s2[j1:j2]
+                identical_fn = False
 
         # [ ] We will probably need to suppress the _id column for some datasets.
         diff_table = OrderedDict([])
@@ -416,6 +420,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
 
 
         context = {'data_dict_1': data_dict_1, 'data_dict_2': data_dict_2, 
+                'identical_fn': identical_fn,
                 'rows1': len(data1),
                 'columns1': len(field_names1),
                 'rows2': len(data2),

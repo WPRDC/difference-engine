@@ -45,10 +45,14 @@
         <hr>
         <div class="row">
             <div class="twelve columns">
-                <h3>Comparison of field names</h3>
+                <h5>Comparison of field names</h5>
+                {% if identical_fn %}
+                    The field names of the two files are identical.
+                {% else %}
                 {% autoescape off %}
                     {{ field_table }}
                 {% endautoescape %}<P>
+                {% endif %}
             </div>
         </div>
         <hr>
