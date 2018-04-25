@@ -325,9 +325,24 @@ def get_resource_stuff(site,resource_code,API_key):
             'package_name': package_title, 'resource_url': resource_url,
             'type': 'resource'} # 'type' could also have the value "file"
 
-    field_names = [a['id'] for a in schema]
+    return data, schema, data_dict, [resource_id]
 
-    return data, schema, data_dict, field_names, [resource_id]
+def remove_fields(data,schema,to_remove):
+    new_schema = []
+    for d in schema: # The pieces look like this: {'id': '_id', 'type': 'int4'}
+        if d['id'] not in to_remove:
+            new_schema.append(d)
+
+    new_data = []
+    for datum in data:
+        new_datum = {}
+        for k,v in datum.items():
+            if k not in to_remove:
+                new_datum[k] = v
+        new_data.append(new_datum)
+
+    new_field_names = [a['id'] for a in new_schema]
+    return new_data, new_schema, new_field_names
 
 def compare(request,resource_code_1=None,resource_code_2=None):
     # Get the resources.
@@ -336,9 +351,14 @@ def compare(request,resource_code_1=None,resource_code_2=None):
     # [ ] Start thinking about refactoring this to make one or both of these 
     #     uploaded CSV files.
 
-    data1, schema1, data_dict_1, field_names1, candidate_r_ids1 = get_resource_stuff(site,resource_code_1,API_key)
-    data2, schema2, data_dict_2, field_names2, candidate_r_ids2 = get_resource_stuff(site,resource_code_2,API_key)
-   
+    data1, schema1, data_dict_1, candidate_r_ids1 = get_resource_stuff(site,resource_code_1,API_key)
+    data2, schema2, data_dict_2, candidate_r_ids2 = get_resource_stuff(site,resource_code_2,API_key)
+ 
+    to_remove = ['_id', 'year_month'] # Eventually make this user-specified.
+    data1, schema1, field_names1 = remove_fields(data1,schema1,to_remove)
+    data2, schema2, field_names2 = remove_fields(data2,schema2,to_remove)
+
+
     context = { 'candidate_r_ids1': candidate_r_ids1,
                 'candidate_r_ids2': candidate_r_ids2,
                 }
