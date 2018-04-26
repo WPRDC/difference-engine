@@ -66,6 +66,11 @@
         <div class="row">
             <div class="twelve columns">
                 <h3>Comparison of resources</h3>
+                {% if diff_summary.identical %}
+                    The files are identical.
+                {% else %}
+                    The second file has {{ diff_summary.insertions }} inserted rows, {{ diff_summary.deletions }} deleted rows, and {{ diff_summary.edits }} edited rows with respect to the first file.
+                {% endif %}
                 {% autoescape off %}
                     {{ flat_table }}
                 {% endautoescape %}<P>

@@ -347,7 +347,7 @@ def analyze_diff(s1,s2,mute=False):
             del s1x[i1:i2]
             del fn1x[i1:i2]
             identical = False
-            deletions += 1
+            deletions += i2-i1
 
         elif tag == 'equal':
             if not mute:
@@ -359,17 +359,17 @@ def analyze_diff(s1,s2,mute=False):
             s1x[i1:i2] = s2x[j1:j2]
             del fn2x[j1:j2]
             identical = False
-            insertions += 1
+            insertions += j2-j1
 
         elif tag == 'replace': # The field names were just changed
             if not mute:
                 print('Replace {} from [{}:{}] of s1 with {} from [{}:{}] of s2'.format(s1x[i1:i2], i1, i2, s2x[j1:j2], j1, j2))
             s1x[i1:i2] = s2x[j1:j2]
             identical = False
-            edits += 1
+            edits += max(i2-i1,j2-j1)
 
-    summary = {'insertions': insertions, 'deletions': deletions, 'edits': edits}
-    return s1x,s2x,fn1x,fn2x,identical, summary
+    summary = {'insertions': insertions, 'deletions': deletions, 'edits': edits, 'identical': identical}
+    return s1x,s2x,fn1x,fn2x,identical,summary
 
 def remove_fields(data,schema,to_remove):
     new_schema = []
