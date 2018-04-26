@@ -328,6 +328,36 @@ def get_resource_stuff(site,resource_code,API_key):
 
     return data, schema, data_dict, [resource_id]
 
+def analyze_diff(s1,s2,fn1,fn2):
+    s1x = list(s1)
+    s2x = list(s2)
+    fn1x = list(fn1)
+    fn2x = list(fn2)
+    matcher = difflib.SequenceMatcher(None, fn1x, fn2x)
+    identical = True
+    for tag, i1, i2, j1, j2 in reversed(matcher.get_opcodes()):
+        if tag == 'delete': # A column was deleted.
+            print('Remove {} from positions [{}:{}]'.format(s1x[i1:i2], i1, i2))
+            del s1x[i1:i2]
+            del fn1x[i1:i2]
+            identical = False
+
+        elif tag == 'equal':
+            print('The sections [{}:{}] of s1 and [{}:{}] of s2 are the same'.format(i1, i2, j1, j2))
+
+        elif tag == 'insert': # A column was added.
+            print('Insert {} from [{}:{}] of s2 into s1 at {}'.format(s2x[j1:j2], j1, j2, i1))
+            s1x[i1:i2] = s2x[j1:j2]
+            del fn2x[j1:j2]
+            identical = False
+
+        elif tag == 'replace': # The field names were just changed
+            print('Replace {} from [{}:{}] of s1 with {} from [{}:{}] of s2'.format(s1x[i1:i2], i1, i2, s2x[j1:j2], j1, j2))
+            s1x[i1:i2] = s2x[j1:j2]
+            identical = False
+
+    return s1x,s2x,fn1x,fn2x,identical
+
 def remove_fields(data,schema,to_remove):
     new_schema = []
     for d in schema: # The pieces look like this: {'id': '_id', 'type': 'int4'}
@@ -428,31 +458,8 @@ def compare(request,resource_code_1=None,resource_code_2=None):
             fromdesc='File 1 fields',
             todesc='File 2 fields')
 
-        s1 = list(field_names1)
-        s2 = list(field_names2)
-        fn1, fn2 = list(field_names1), list(field_names2) # These should be just the kept and renamed fields.
-        matcher = difflib.SequenceMatcher(None, field_names1, field_names2)
-        identical_fn = True
-        for tag, i1, i2, j1, j2 in reversed(matcher.get_opcodes()):
-            if tag == 'delete': # A column was deleted.
-                print('Remove {} from positions [{}:{}]'.format(s1[i1:i2], i1, i2))
-                del s1[i1:i2]
-                del fn1[i1:i2]
-                identical_fn = False
 
-            elif tag == 'equal':
-                print('The sections [{}:{}] of s1 and [{}:{}] of s2 are the same'.format(i1, i2, j1, j2))
-
-            elif tag == 'insert': # A column was added.
-                print('Insert {} from [{}:{}] of s2 into s1 at {}'.format(s2[j1:j2], j1, j2, i1))
-                s1[i1:i2] = s2[j1:j2]
-                del fn2[j1:j2]
-                identical_fn = False
-
-            elif tag == 'replace': # The field names were just changed
-                print('Replace {} from [{}:{}] of s1 with {} from [{}:{}] of s2'.format(s1[i1:i2], i1, i2, s2[j1:j2], j1, j2))
-                s1[i1:i2] = s2[j1:j2]
-                identical_fn = False
+        s1,s2,fn1,fn2,identical_fn = analyze_diff(list(field_names1),list(field_names2),list(field_names1),list(field_names2))
 
         diff_table = OrderedDict([])
 
