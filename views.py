@@ -328,35 +328,48 @@ def get_resource_stuff(site,resource_code,API_key):
 
     return data, schema, data_dict, [resource_id]
 
-def analyze_diff(s1,s2,fn1,fn2):
+def analyze_diff(s1,s2,mute=False):
+    # This function employs the SequenceMatcher to determine the operations 
+    # necessary to move from one sequence to the other.
     s1x = list(s1)
     s2x = list(s2)
-    fn1x = list(fn1)
-    fn2x = list(fn2)
+    fn1x = list(s1)
+    fn2x = list(s2)
     matcher = difflib.SequenceMatcher(None, fn1x, fn2x)
     identical = True
+    insertions = 0
+    deletions = 0
+    edits = 0
     for tag, i1, i2, j1, j2 in reversed(matcher.get_opcodes()):
         if tag == 'delete': # A column was deleted.
-            print('Remove {} from positions [{}:{}]'.format(s1x[i1:i2], i1, i2))
+            if not mute:
+                print('Remove {} from positions [{}:{}]'.format(s1x[i1:i2], i1, i2))
             del s1x[i1:i2]
             del fn1x[i1:i2]
             identical = False
+            deletions += 1
 
         elif tag == 'equal':
-            print('The sections [{}:{}] of s1 and [{}:{}] of s2 are the same'.format(i1, i2, j1, j2))
+            if not mute:
+                print('The sections [{}:{}] of s1 and [{}:{}] of s2 are the same'.format(i1, i2, j1, j2))
 
         elif tag == 'insert': # A column was added.
-            print('Insert {} from [{}:{}] of s2 into s1 at {}'.format(s2x[j1:j2], j1, j2, i1))
+            if not mute:
+                print('Insert {} from [{}:{}] of s2 into s1 at {}'.format(s2x[j1:j2], j1, j2, i1))
             s1x[i1:i2] = s2x[j1:j2]
             del fn2x[j1:j2]
             identical = False
+            insertions += 1
 
         elif tag == 'replace': # The field names were just changed
-            print('Replace {} from [{}:{}] of s1 with {} from [{}:{}] of s2'.format(s1x[i1:i2], i1, i2, s2x[j1:j2], j1, j2))
+            if not mute:
+                print('Replace {} from [{}:{}] of s1 with {} from [{}:{}] of s2'.format(s1x[i1:i2], i1, i2, s2x[j1:j2], j1, j2))
             s1x[i1:i2] = s2x[j1:j2]
             identical = False
+            edits += 1
 
-    return s1x,s2x,fn1x,fn2x,identical
+    summary = {'insertions': insertions, 'deletions': deletions, 'edits': edits}
+    return s1x,s2x,fn1x,fn2x,identical, summary
 
 def remove_fields(data,schema,to_remove):
     new_schema = []
@@ -459,7 +472,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
             todesc='File 2 fields')
 
 
-        s1,s2,fn1,fn2,identical_fn = analyze_diff(list(field_names1),list(field_names2),list(field_names1),list(field_names2))
+        _,_,fn1,fn2,identical_fn,_ = analyze_diff(list(field_names1),list(field_names2))
 
         diff_table = OrderedDict([])
 
@@ -493,6 +506,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
                 numlines=2,
                 )
 
+        s1,s2,_,_,identical_files,diff_summary = analyze_diff(list(d1),list(d2))
 
         context = {'data_dict_1': data_dict_1, 'data_dict_2': data_dict_2, 
                 'identical_fn': identical_fn,
@@ -506,6 +520,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
                 'candidate_r_ids1': candidate_r_ids1,
                 'candidate_r_ids2': candidate_r_ids2,
                 'field_picker': FieldsForm().as_p(),
+                'diff_summary': diff_summary
                 }
     return render(request, 'difference_engine/results.html', context)
 
