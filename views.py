@@ -484,7 +484,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
                     fromdesc='Resource 1: {}'.format(f1),
                     todesc='Resource 2: {}'.format(f2),
                     context=True,
-                    numlines=2,
+                    numlines=1,
                     )
 
         # Synthesize lists of data with only the selected (kept or renamed) fields.
@@ -503,7 +503,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
                 fromdesc='File 1',
                 todesc='File 2',
                 context=True,
-                numlines=2,
+                numlines=0,
                 )
 
         s1,s2,_,_,identical_files,diff_summary = analyze_diff(list(d1),list(d2))
