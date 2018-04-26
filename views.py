@@ -345,6 +345,7 @@ def remove_fields(data,schema,to_remove):
     return new_data, new_schema, new_field_names
 
 def compare(request,resource_code_1=None,resource_code_2=None):
+    max_cols = 50
     # Get the resources.
     site, API_key, _, _ = activate_wormhole(SETTINGS_FILE,SERVER)
 
@@ -372,7 +373,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
         pprint(data_dict_1)
 
         # Compare things using difflib (or whatever).
-        field_table = difflib.HtmlDiff(wrapcolumn=60).make_table(
+        field_table = difflib.HtmlDiff(wrapcolumn=max_cols).make_table(
             fromlines=field_names1,
             tolines=field_names2,
             fromdesc='File 1 fields',
@@ -409,7 +410,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
         for f1,f2 in zip(fn1,fn2):
             column1 = [str(d[f1]) for d in data1] # We need to cast values to strings so that
             column2 = [str(d[f2]) for d in data2] # difflib.HtmlDiff can operate on them.
-            diff_table[f1] = difflib.HtmlDiff(wrapcolumn=60).make_table(fromlines=column1,
+            diff_table[f1] = difflib.HtmlDiff(wrapcolumn=max_cols).make_table(fromlines=column1,
                     tolines=column2,
                     fromdesc='Resource 1: {}'.format(f1),
                     todesc='Resource 2: {}'.format(f2),
@@ -428,8 +429,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
             d2_flat = ','.join([str(row[f2]) for f2 in fn2])
             d2.append(d2_flat)
 
-
-        flat_table = difflib.HtmlDiff(wrapcolumn=60).make_table(fromlines=d1,
+        flat_table = difflib.HtmlDiff(wrapcolumn=max_cols).make_table(fromlines=d1,
                 tolines=d2,
                 fromdesc='File 1',
                 todesc='File 2',
