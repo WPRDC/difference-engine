@@ -357,6 +357,31 @@ def compare(request,resource_code_1=None,resource_code_2=None):
     data2, schema2, data_dict_2, candidate_r_ids2 = get_resource_stuff(site,resource_code_2,API_key)
  
     to_remove = ['_id', 'year_month'] # Eventually make this user-specified.
+
+    # Synthesize a list of field names just to creat a version of the form to validate against.
+    all_field_names = [a['id'] for a in schema1 + schema2]
+    csv_field_choices = [(f, f) for f in all_field_names]
+
+    class FieldsForm(forms.Form):
+        fields_to_ignore = forms.MultipleChoiceField(choices=csv_field_choices,
+                widget=forms.SelectMultiple())
+   
+   # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        field_form = FieldsForm(request.POST)
+        #if field_form.is_valid():
+        #    fields_to_ignore = field_form.cleaned_data.get('fields_to_ignore')
+        #    # do something with your results
+        #    to_remove += fields_to_ignore
+        #    to_remove = list(set(to_remove))
+        #    print("to_remove = {}".format(to_remove))
+        #else:
+        #    print("field_form is not valid, for some reason")
+        fields_to_ignore = request.POST.getlist('fields_to_ignore')
+        to_remove += fields_to_ignore
+        to_remove = list(set(to_remove))
+
     data1, schema1, field_names1 = remove_fields(data1,schema1,to_remove)
     data2, schema2, field_names2 = remove_fields(data2,schema2,to_remove)
 
