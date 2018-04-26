@@ -310,7 +310,7 @@ def get_resource_stuff(site,resource_code,API_key):
     if type(resource_id) == list:
         return None, None, None, None, [r['name'] for r in resource_id]
     data, schema = get_all_records(site,resource_id,API_key=API_key,chunk_size=5000)
-
+    
     metadata = get_resource_parameter(site,resource_id,None,API_key)
 
     package_id = metadata['package_id']
@@ -372,7 +372,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
         pprint(data_dict_1)
 
         # Compare things using difflib (or whatever).
-        field_table = difflib.HtmlDiff().make_table(
+        field_table = difflib.HtmlDiff(wrapcolumn=60).make_table(
             fromlines=field_names1,
             tolines=field_names2,
             fromdesc='File 1 fields',
@@ -404,13 +404,12 @@ def compare(request,resource_code_1=None,resource_code_2=None):
                 s1[i1:i2] = s2[j1:j2]
                 identical_fn = False
 
-        # [ ] We will probably need to suppress the _id column for some datasets.
         diff_table = OrderedDict([])
 
         for f1,f2 in zip(fn1,fn2):
             column1 = [str(d[f1]) for d in data1] # We need to cast values to strings so that
             column2 = [str(d[f2]) for d in data2] # difflib.HtmlDiff can operate on them.
-            diff_table[f1] = difflib.HtmlDiff().make_table(fromlines=column1,
+            diff_table[f1] = difflib.HtmlDiff(wrapcolumn=60).make_table(fromlines=column1,
                     tolines=column2,
                     fromdesc='Resource 1: {}'.format(f1),
                     todesc='Resource 2: {}'.format(f2),
@@ -430,7 +429,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
             d2.append(d2_flat)
 
 
-        flat_table = difflib.HtmlDiff().make_table(fromlines=d1,
+        flat_table = difflib.HtmlDiff(wrapcolumn=60).make_table(fromlines=d1,
                 tolines=d2,
                 fromdesc='File 1',
                 todesc='File 2',
