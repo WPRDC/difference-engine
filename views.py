@@ -5,6 +5,7 @@ from django.db import models as django_models
 
 #from django.template import loader
 from django.http import HttpResponse
+from django import forms
 import os, sys, re, csv, json, datetime, time, ckanapi
 from pprint import pprint
 from collections import OrderedDict
@@ -359,10 +360,33 @@ def compare(request,resource_code_1=None,resource_code_2=None):
     data1, schema1, field_names1 = remove_fields(data1,schema1,to_remove)
     data2, schema2, field_names2 = remove_fields(data2,schema2,to_remove)
 
-
     context = { 'candidate_r_ids1': candidate_r_ids1,
                 'candidate_r_ids2': candidate_r_ids2,
                 }
+
+    # Construct a list of all field names that lists those in both files first.
+    all_field_names = []
+    extra_field_names = []
+    for fn1 in field_names1:
+        if fn1 in field_names2:
+            all_field_names.append(fn1)
+        else:
+            extra_field_names.append(fn1)
+    all_field_names += extra_field_names
+    for fn2 in field_names2:
+        if fn2 not in field_names1:
+            all_field_names.append(fn2)
+
+    csv_field_choices = [(f, f) for f in all_field_names]
+
+    class FieldsForm(forms.Form):
+        fields_to_ignore = forms.MultipleChoiceField(choices=csv_field_choices,
+                widget=forms.SelectMultiple())
+                #widget=forms.SelectMultiple(attrs={'size': 20, 'min-height': '3.5em'}))
+
+    if request.method != 'POST':
+        field_form = FieldsForm # This is not being used.
+
     if data1 is None and data2 is None:
         context['error'] = 'Neither {} nor {} could be found.'.format(resource_code_1,resource_code2)
     elif data1 is None:
@@ -449,6 +473,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
                 'flat_table': flat_table,
                 'candidate_r_ids1': candidate_r_ids1,
                 'candidate_r_ids2': candidate_r_ids2,
+                'field_picker': FieldsForm().as_p(),
                 }
     return render(request, 'difference_engine/results.html', context)
 

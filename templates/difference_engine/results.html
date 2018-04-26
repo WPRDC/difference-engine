@@ -53,6 +53,12 @@
                     {{ field_table }}
                 {% endautoescape %}<P>
                 {% endif %}
+                <br>Select fields to ignore in the comparison:
+            <form method="post">
+                {% csrf_token %}
+                {{ field_picker }}
+                <input type="submit" value="Submit">
+            </form>
             </div>
         </div>
         <hr>
