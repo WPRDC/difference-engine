@@ -465,7 +465,7 @@ def compare(request,resource_code_1=None,resource_code_2=None):
         pprint(data_dict_1)
 
         # Compare things using difflib (or whatever).
-        field_table = difflib.HtmlDiff(wrapcolumn=max_cols).make_table(
+        field_table = difflib.HtmlDiff(wrapcolumn=35).make_table(
             fromlines=field_names1,
             tolines=field_names2,
             fromdesc='File 1 fields',
