@@ -6,6 +6,17 @@
         <link rel="stylesheet" type="text/css" href="{% static 'difference_engine/css/skeleton.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'difference_engine/css/engine.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'difference_engine/css/diff.css' %}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script>
+        $(document).ready(function(){
+            $("#hide").click(function(){
+                $("#resourceComparison").hide();
+            });
+            $("#show").click(function(){
+                $("#resourceComparison").show();
+            });
+        });
+        </script>
     </head>
     <body>
     <div class="container">
@@ -84,6 +95,9 @@
             <div class="twelve columns">
                 <h3>Comparisons of resources by column*</h3>
                 * This approach is a little buggier but sort of more readable.<br>
+                <button id="hide">Hide</button>
+                <button id="show">Show</button>
+                <div id="resourceComparison">
 
                 {% for field,table in diff_table.items %}
                     <b>{{ field }}</b>
@@ -91,6 +105,7 @@
                         {{ table }}
                     {% endautoescape %}<P>
                 {% endfor %}
+                </div>
             </div>
         </div>
         {% endif %}
