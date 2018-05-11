@@ -42,14 +42,14 @@
                 {% endif %}
             </div>
             <div class="four columns">
-                <b>Select fields to ignore in the comparison</b>
+                Select fields to ignore in the comparison.
                 <form method="post">
                     {% csrf_token %}
                     {{ field_picker }}
                     <input type="submit" value="Recompare">
                 </form>
                 {% if identical_fn %}
-                    <i>The field names of the two files are identical.</i>
+                    <small>(The field names of the two files are identical.)</small>
                 {% endif %}
             </div>
         </div>
