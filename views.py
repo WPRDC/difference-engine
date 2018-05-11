@@ -252,11 +252,33 @@ def find_resource_candidates_from_package(site,package,codes,resource_code):
         # end possibly common block #
 
 
-        # There are still multiple r_candidates. Use the third part of the code:
+        # There are still multiple r_candidates. Use the third part of the code.
+        # 0) Identify year/year-month string in resource name.
+        # 1) Make a connection between current year/year-month and resource name of youngest resource.
+
+
+        if len(codes) > 2:
+            if codes[2][0] == '-': # It's a negative number and codes for a relative time unit.
+                pass
+            elif codes[2] == '0': # This is also being reserved for selecting resources
+                # by parsing dates out of the resource names.
+                pass
+            else:
+                # Reverse-alphabetize the resource names, since that almost
+                # always sorts them by timestamp.
+                sorted_rs = sorted(r_candidates, key=lambda r: r['name'], reverse=True)
+                index = int(codes[2]) - 1 # "1" => the first element in the list,
+                                          # which should be the most recent.
+                if index < len(sorted_rs):
+                    return [sorted_rs[index]]
+                else:
+                    print("No CSV resources found meeting the description '{}'.".format(resource_code))
+                    return []
+
         #print("Here are the {} resources I found: {}".format(len(r_candidates),r_candidates))
         #pprint([r['name'] for r in r_candidates])
         return r_candidates
-
+    #This function should always return a list of options (even if there's only one or zero candidates).
 
 
 def decode(resource_code,site,API_key):
@@ -276,6 +298,7 @@ def decode(resource_code,site,API_key):
         p_candidates = []
         if codes[0].lower() in package_cache.keys():
             package_id = package_cache[codes[0]]
+            return find_resource_candidates_from_package(site,package,codes,resource_code)
         else:
             ckan = ckanapi.RemoteCKAN(site) # Without specifying the apikey field value,
             # the next line will only return non-private packages.
